@@ -23,5 +23,5 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Suppress console errors in tests (optional)
-global.console.error = vi.fn();
-global.console.warn = vi.fn();
+// global.console.error = vi.fn();
+// global.console.warn = vi.fn();

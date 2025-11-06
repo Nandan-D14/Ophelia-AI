@@ -124,7 +124,7 @@ export default function CartPage() {
     setUpdating(true);
 
     setError(null);
-
+    const originalCartData = cartData;
     try {
 
       const { data, error: updateError } = await supabase.functions.invoke('cart-manager', {
@@ -154,7 +154,7 @@ export default function CartPage() {
       console.error('Error updating quantity:', err);
 
       setError(errorMessage);
-
+      setCartData(originalCartData);
     } finally {
 
       setUpdating(false);
@@ -170,7 +170,7 @@ export default function CartPage() {
     setUpdating(true);
 
     setError(null);
-
+    const originalCartData = cartData;
     try {
 
       const { data, error: removeError } = await supabase.functions.invoke('cart-manager', {
@@ -198,7 +198,7 @@ export default function CartPage() {
       console.error('Error removing item:', err);
 
       setError(errorMessage);
-
+      setCartData(originalCartData);
     } finally {
 
       setUpdating(false);
