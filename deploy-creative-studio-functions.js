@@ -2,8 +2,8 @@
 // This creates the functions as web endpoints using the Gemini API
 
 const SUPABASE_URL = 'https://aexkbjcoskoqrzpqplyv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFleGtiamNvc2tvcXJ6cHFwbHl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2OTY3NDMsImV4cCI6MjA3NjI3Mjc0M30.8Z7URsZb9rWkHh9HFOZ331qF12DpGNdOYIbzw3AVB2Q';
-const GEMINI_API_KEY = 'AIzaSyBv-v3KQS4q4Dk-jSlY_NAFkNijjna6vMc';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY_HERE';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
 
 async function testRealGeminiIntegration() {
   console.log('🔬 Testing Real Gemini Integration for Creative Studio...');
