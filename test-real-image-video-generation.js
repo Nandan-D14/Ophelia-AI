@@ -1,5 +1,5 @@
 // Test Real Image and Video Generation using Gemini APIs with CORRECT model names
-const GEMINI_API_KEY = 'AIzaSyBv-v3KQS4q4Dk-jSlY_NAFkNijjna6vMc';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
 
 async function testRealImageGeneration() {
   console.log('🖼️ Testing Real Image Generation with Gemini 2.5 Flash Image...');
