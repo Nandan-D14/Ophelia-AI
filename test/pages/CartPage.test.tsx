@@ -1,117 +1,165 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import CartPage from '@/pages/CartPage';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { MemoryRouter } from 'react-router-dom';
 
-/**
- * Example test suite for CartPage Component
- * 
- * These tests demonstrate how to test your React components.
- * Use React Testing Library for comprehensive component testing.
- */
+vi.mock('@/contexts/AuthContext');
+vi.mock('@/lib/supabase');
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+const mockUser = { id: 'user-123' };
+
+const mockCartData = {
+  cart: { id: 'cart-1', user_id: 'user-123', created_at: '', updated_at: '' },
+  items: [
+    { id: 'item-1', product_id: 'prod-1', product_name: 'Product 1', product_image: null, price_at_addition: 10, quantity: 2 },
+    { id: 'item-2', product_id: 'prod-2', product_name: 'Product 2', product_image: null, price_at_addition: 20, quantity: 1 },
+  ],
+  total: 40,
+  itemCount: 3,
+};
 
 describe('CartPage', () => {
-  describe('Rendering', () => {
-    it('should display loading state initially', () => {
-      // TODO: Import and render CartPage with mock data
-      // Example:
-      // import { render, screen } from '@testing-library/react';
-      // import CartPage from '@/pages/CartPage';
-      // const { getByRole } = render(<CartPage />);
-      // expect(getByRole('progressbar')).toBeInTheDocument();
-      
-      expect(true).toBe(true);
-    });
+  beforeEach(() => {
+    vi.resetAllMocks();
+    (useAuth as jest.Mock).mockReturnValue({ user: mockUser });
+    (supabase.functions.invoke as jest.Mock).mockResolvedValue({ data: mockCartData, error: null });
+  });
 
-    it('should display empty cart message when cart is empty', () => {
-      // TODO: Test empty state rendering
-      expect(true).toBe(true);
-    });
+  it('should display loading state initially', () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
 
-    it('should display cart items when data is loaded', () => {
-      // TODO: Test cart items rendering
-      expect(true).toBe(true);
-    });
-
-    it('should display error message when loading fails', () => {
-      // TODO: Test error state rendering
-      expect(true).toBe(true);
+  it('should display cart items when data is loaded', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+      expect(screen.getByText('Product 1')).toBeInTheDocument();
+      expect(screen.getByText('Product 2')).toBeInTheDocument();
     });
   });
 
-  describe('Cart Operations', () => {
-    it('should load cart data on component mount', () => {
-      // TODO: Test useEffect hook calls
-      expect(true).toBe(true);
-    });
-
-    it('should reload cart when user changes', () => {
-      // TODO: Test dependency array in useEffect
-      expect(true).toBe(true);
-    });
-
-    it('should allow quantity increase', () => {
-      // TODO: Test increment button functionality
-      expect(true).toBe(true);
-    });
-
-    it('should allow quantity decrease', () => {
-      // TODO: Test decrement button functionality
-      expect(true).toBe(true);
-    });
-
-    it('should remove item when quantity becomes 0', () => {
-      // TODO: Test quantity reaching zero
-      expect(true).toBe(true);
-    });
-
-    it('should allow item removal', () => {
-      // TODO: Test delete button functionality
-      expect(true).toBe(true);
+  it('should display empty cart message when cart is empty', async () => {
+    (supabase.functions.invoke as jest.Mock).mockResolvedValue({ data: { cart: null, items: [], total: 0, itemCount: 0 }, error: null });
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+      expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
     });
   });
 
-  describe('Error Handling', () => {
-    it('should display error message when cart load fails', () => {
-      // TODO: Test error state
-      expect(true).toBe(true);
-    });
-
-    it('should show Try Again button on error', () => {
-      // TODO: Test error recovery UI
-      expect(true).toBe(true);
-    });
-
-    it('should retry loading when Try Again is clicked', () => {
-      // TODO: Test retry functionality
-      expect(true).toBe(true);
-    });
-
-    it('should disable update buttons while updating', () => {
-      // TODO: Test loading state during updates
-      expect(true).toBe(true);
+  it('should display error message when loading fails', async () => {
+    (supabase.functions.invoke as jest.Mock).mockRejectedValue(new Error('Failed to load cart'));
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load cart. Please try again.')).toBeInTheDocument();
     });
   });
 
-  describe('Navigation', () => {
-    it('should navigate to checkout on Proceed button click', () => {
-      // TODO: Test navigation
-      expect(true).toBe(true);
+  it('should allow quantity increase', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+        expect(screen.getByText('Product 1')).toBeInTheDocument();
     });
 
-    it('should navigate to marketplace on Continue Shopping', () => {
-      // TODO: Test navigation
-      expect(true).toBe(true);
+    const increaseButton = screen.getAllByRole('button', { name: /plus/i })[0];
+    fireEvent.click(increaseButton);
+
+    await waitFor(() => {
+        expect(supabase.functions.invoke).toHaveBeenCalledWith('cart-manager', {
+            body: { action: 'update', productId: 'prod-1', quantity: 3 }
+        });
     });
   });
 
-  describe('Calculations', () => {
-    it('should calculate correct total price', () => {
-      // TODO: Test total price calculation
-      expect(true).toBe(true);
+  it('should allow quantity decrease', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+        expect(screen.getByText('Product 1')).toBeInTheDocument();
     });
 
-    it('should display item count correctly', () => {
-      // TODO: Test item count display
-      expect(true).toBe(true);
+    const decreaseButton = screen.getAllByRole('button', { name: /minus/i })[0];
+    fireEvent.click(decreaseButton);
+
+    await waitFor(() => {
+        expect(supabase.functions.invoke).toHaveBeenCalledWith('cart-manager', {
+            body: { action: 'update', productId: 'prod-1', quantity: 1 }
+        });
     });
+  });
+
+  it('should remove item when quantity becomes 0', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+        expect(screen.getByText('Product 2')).toBeInTheDocument();
+    });
+
+    const decreaseButton = screen.getAllByRole('button', { name: /minus/i })[1];
+    fireEvent.click(decreaseButton);
+
+    await waitFor(() => {
+        expect(supabase.functions.invoke).toHaveBeenCalledWith('cart-manager', {
+            body: { action: 'remove', productId: 'prod-2' }
+        });
+    });
+  });
+
+  it('should allow item removal', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+        expect(screen.getByText('Product 1')).toBeInTheDocument();
+    });
+
+    const removeButton = screen.getAllByRole('button', { name: /trash/i })[0];
+    fireEvent.click(removeButton);
+
+    await waitFor(() => {
+        expect(supabase.functions.invoke).toHaveBeenCalledWith('cart-manager', {
+            body: { action: 'remove', productId: 'prod-1' }
+        });
+    });
+  });
+
+  it('should rollback quantity on failed update', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+      expect(screen.getByText('Product 1')).toBeInTheDocument();
+    });
+
+    // Ensure the quantity is initially 2
+    expect(screen.getByText('2')).toBeInTheDocument();
+
+    (supabase.functions.invoke as jest.Mock).mockRejectedValueOnce(new Error('Update failed'));
+
+    const increaseButton = screen.getAllByRole('button', { name: /plus/i })[0];
+    fireEvent.click(increaseButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to update quantity. Please try again.')).toBeInTheDocument();
+    });
+
+    // Check that the quantity rolled back to 2
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('should navigate to checkout on Proceed button click', async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    await waitFor(() => {
+        expect(screen.getByText('Product 1')).toBeInTheDocument();
+    });
+
+    const checkoutButton = screen.getByRole('button', { name: /proceed to checkout/i });
+    fireEvent.click(checkoutButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/checkout');
   });
 });

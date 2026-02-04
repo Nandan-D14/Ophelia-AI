@@ -104,7 +104,7 @@ export default function CartPage() {
 
     setUpdating(true);
     setError(null);
-
+    const originalCartData = cartData;
     try {
       const { error: updateError } = await supabase
         .from('shopping_cart')
@@ -125,7 +125,7 @@ export default function CartPage() {
   async function removeItem(cartItemId: string) {
     setUpdating(true);
     setError(null);
-
+    const originalCartData = cartData;
     try {
       const { error: removeError } = await supabase
         .from('shopping_cart')
