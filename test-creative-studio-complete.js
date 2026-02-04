@@ -1,5 +1,5 @@
 // Comprehensive test for Creative Studio functionality
-const GEMINI_API_KEY = 'AIzaSyBv-v3KQS4q4Dk-jSlY_NAFkNijjna6vMc';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
 
 async function testContentGeneration() {
   console.log('📝 Testing Content Generation...');
